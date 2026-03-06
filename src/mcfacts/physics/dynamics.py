@@ -18,6 +18,8 @@ from mcfacts.physics.point_masses import time_of_orbital_shrinkage
 from mcfacts.physics.point_masses import si_from_r_g, r_g_from_units, r_schwarzschild_of_m
 from mcfacts.physics.binary.evolve import bin_ionization_check
 
+from mcfast import encounters_prograde_sweep_helper
+
 
 def components_from_EL(E, L, units='geometric', smbh_mass=1e8):
     """Calculates new orb_a and eccentricity from specific energy and specific angular momentum
@@ -691,7 +693,40 @@ def circular_singles_encounters_prograde(
 
     return (disk_bh_pro_orbs_a, disk_bh_pro_orbs_ecc)
 
+def circular_singles_encounters_prograde_sweep_optimized(
+    smbh_mass,
+    disk_bh_pro_orbs_a,
+    disk_bh_pro_masses,
+    disk_bh_pro_orbs_ecc,
+    timestep_duration_yr,
+    disk_bh_pro_orb_ecc_crit,
+    delta_energy_strong,
+    disk_radius_outer,
+    rng_here = rng
+):
+    # Find the e< crit_ecc. population. These are the (circularized) population that can form binaries.
+    circ_prograde_population_indices = np.asarray(disk_bh_pro_orbs_ecc <= disk_bh_pro_orb_ecc_crit).nonzero()[0]
+    # Find the e> crit_ecc population. These are the interlopers that can perturb the circularized population
+    ecc_prograde_population_indices = np.asarray(disk_bh_pro_orbs_ecc > disk_bh_pro_orb_ecc_crit).nonzero()[0]
 
+    eps_denom = rng_here.uniform(size=(len(circ_prograde_population_indices), len(ecc_prograde_population_indices)))
+    chance_of_encounter = rng_here.uniform(size=(len(circ_prograde_population_indices), len(ecc_prograde_population_indices)))
+
+    # insert helper fn here
+    disk_bh_pro_orbs_a, disk_bh_pro_orbs_ecc = encounters_prograde_sweep_helper(
+        smbh_mass,
+        disk_bh_pro_orbs_a,
+        disk_bh_pro_masses,
+        disk_bh_pro_orbs_ecc, 
+        timestep_duration_yr,
+        disk_bh_pro_orb_ecc_crit,
+        delta_energy_strong,
+        disk_radius_outer,
+        eps_denom,
+        chance_of_encounter
+    )
+
+    return (disk_bh_pro_orbs_a, disk_bh_pro_orbs_ecc)
 
 def circular_singles_encounters_prograde_sweep(
         smbh_mass,
