@@ -762,8 +762,8 @@ def circular_singles_encounters_prograde_sweep(
     ecc_orb_max = disk_bh_pro_orbs_a[ecc_prograde_population_indices]*(1.0+disk_bh_pro_orbs_ecc[ecc_prograde_population_indices])
     # Generate all possible needed random numbers ahead of time
     chance_of_enc = rng_here.uniform(size=(len(circ_prograde_population_indices), len(ecc_prograde_population_indices)))
-
-    if (circ_len/(circ_len + ecc_len)) * (ecc_len/(circ_len + ecc_len)) * 100 > 50: # an ad-hoc check to see whether the double loop or sweep will be faster
+    # if (circ_len/(circ_len + ecc_len)) * (ecc_len/(circ_len + ecc_len)) * 100 > 50: # an ad-hoc check to see whether the double loop or sweep will be faster
+    if True:
         # if True engage the sweep algorithm
 
         # create the events array
@@ -824,7 +824,7 @@ def circular_singles_encounters_prograde_sweep(
                     
                     if chance_of_enc[circ_rel_idx, ecc_rel_idx] < prob_enc_per_timestep:
                         # apply state change, using the fixed logic
-                        disk_bh_pro_orbs_ecc[circ_idx] = delta_energy_strong * 1.0001
+                        disk_bh_pro_orbs_ecc[circ_idx] = delta_energy_strong
                         disk_bh_pro_orbs_a[circ_idx] *= (1.0 + delta_energy_strong)
                         if (disk_bh_pro_orbs_a[circ_idx] >= disk_radius_outer):
                             

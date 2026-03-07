@@ -249,7 +249,7 @@ def main():
     for galaxy in range(opts.galaxy_num):
         print("Galaxy", galaxy)
         # Set random number generator for this run with incremented seed
-        rng = reset_random(opts.seed+galaxy)
+        reset_random(opts.seed+galaxy)
 
         # Make subdirectories for each galaxy
         # Fills run number with leading zeros to stay sequential
@@ -1107,29 +1107,86 @@ def main():
             # Perturb eccentricity via dynamical encounters
             if opts.flag_dynamic_enc > 0:
 
+                # make copies
+                copy_a = blackholes_pro.orb_a.copy()
+                copy_mass = blackholes_pro.mass.copy()
+                copy_ecc = blackholes_pro.orb_ecc.copy()
+
                 # BH-BH encounters
                 if opts.flag_dynamics_sweep:
-                    blackholes_pro.orb_a, blackholes_pro.orb_ecc = dynamics.circular_singles_encounters_prograde_sweep(
+                    # rng_state = rng.get_state()
+
+                    # blackholes_pro.orb_a, blackholes_pro.orb_ecc = dynamics.circular_singles_encounters_prograde_sweep(
+                    #     opts.smbh_mass,
+                    #     blackholes_pro.orb_a,
+                    #     blackholes_pro.mass,
+                    #     blackholes_pro.orb_ecc,
+                    #     opts.timestep_duration_yr,
+                    #     opts.disk_bh_pro_orb_ecc_crit,
+                    #     opts.delta_energy_strong_mu,
+                    #     opts.disk_radius_outer,
+                    # )
+
+                    # rng.set_state(rng_state)
+
+                    blackholes_pro.orb_a, blackholes_pro.orb_ecc  = dynamics.circular_singles_encounters_prograde_sweep_optimized(
                         opts.smbh_mass,
-                        blackholes_pro.orb_a,
-                        blackholes_pro.mass,
-                        blackholes_pro.orb_ecc,
+                        copy_a,
+                        copy_mass,
+                        copy_ecc,
                         opts.timestep_duration_yr,
                         opts.disk_bh_pro_orb_ecc_crit,
                         opts.delta_energy_strong_mu,
-                        opts.disk_radius_outer
+                        opts.disk_radius_outer,
                     )
+                    
+                    # print('\n original')
+                    # print(blackholes_pro.orb_a)
+                    # # print(", ".join(list(blackholes_pro.orb_a)))
+                    # print('\n')
+                    # # print(", ".join(list(orb_a_rs)))
+                    # print(orb_a_rs)
+                    # print('end \n')
+
+                    # print([(a_scalar,b_scalar) for a_scalar, b_scalar in zip(blackholes_pro.orb_ecc, orb_ecc_rs) if a_scalar != b_scalar])
+                    # assert(np.allclose(blackholes_pro.orb_a, orb_a_rs, rtol = 1e-9))
+                    # assert(np.allclose(blackholes_pro.orb_ecc, orb_ecc_rs, rtol = 1e-9))
+
                 else:
-                    blackholes_pro.orb_a, blackholes_pro.orb_ecc = dynamics.circular_singles_encounters_prograde(
+                    # rng_state = rng.get_state()
+                    # blackholes_pro.orb_a, blackholes_pro.orb_ecc = dynamics.circular_singles_encounters_prograde(
+                    #     opts.smbh_mass,
+                    #     blackholes_pro.orb_a,
+                    #     blackholes_pro.mass,
+                    #     blackholes_pro.orb_ecc,
+                    #     opts.timestep_duration_yr,
+                    #     opts.disk_bh_pro_orb_ecc_crit,
+                    #     opts.delta_energy_strong_mu,
+                    #     opts.disk_radius_outer
+                    # )
+                    #
+                    # rng.set_state(rng_state)
+                    #
+                    blackholes_pro.orb_a, blackholes_pro.orb_ecc = dynamics.circular_singles_encounters_prograde_sweep_optimized(
                         opts.smbh_mass,
-                        blackholes_pro.orb_a,
-                        blackholes_pro.mass,
-                        blackholes_pro.orb_ecc,
+                        copy_a,
+                        copy_mass,
+                        copy_ecc,
                         opts.timestep_duration_yr,
                         opts.disk_bh_pro_orb_ecc_crit,
                         opts.delta_energy_strong_mu,
-                        opts.disk_radius_outer
+                        opts.disk_radius_outer,
                     )
+
+                    # print('\n original')
+                    # print(blackholes_pro.orb_a)
+                    # print('\n')
+                    # print(orb_a_rs)
+                    # print('end \n')
+
+                    # print([(a_scalar,b_scalar) for a_scalar, b_scalar in zip(blackholes_pro.orb_ecc, orb_ecc_rs) if a_scalar != b_scalar])
+                    # assert(np.allclose(blackholes_pro.orb_a, orb_a_rs, rtol = 1e-9))
+                    # assert(np.allclose(blackholes_pro.orb_ecc, orb_ecc_rs, rtol = 1e-9))
 
                 # Star-star encounters
                 rstar_rhill_exponent = 2.0
