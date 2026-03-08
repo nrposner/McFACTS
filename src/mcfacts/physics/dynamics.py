@@ -708,9 +708,16 @@ def circular_singles_encounters_prograde_sweep_optimized(
     circ_prograde_population_indices = np.asarray(disk_bh_pro_orbs_ecc <= disk_bh_pro_orb_ecc_crit).nonzero()[0]
     # Find the e> crit_ecc population. These are the interlopers that can perturb the circularized population
     ecc_prograde_population_indices = np.asarray(disk_bh_pro_orbs_ecc > disk_bh_pro_orb_ecc_crit).nonzero()[0]
+    
+    circ_len = len(circ_prograde_population_indices)
+    ecc_len = len(ecc_prograde_population_indices)
+
+    if (circ_len == 0) or (ecc_len == 0):
+        return disk_bh_pro_orbs_a, disk_bh_pro_orbs_ecc
 
     eps_denom = rng_here.uniform(size=(len(circ_prograde_population_indices), len(ecc_prograde_population_indices)))
     chance_of_encounter = rng_here.uniform(size=(len(circ_prograde_population_indices), len(ecc_prograde_population_indices)))
+
 
     # insert helper fn here
     disk_bh_pro_orbs_a, disk_bh_pro_orbs_ecc = encounters_prograde_sweep_helper(
