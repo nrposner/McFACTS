@@ -1107,17 +1107,12 @@ def main():
             # Perturb eccentricity via dynamical encounters
             if opts.flag_dynamic_enc > 0:
 
-                # make copies
-                copy_a = blackholes_pro.orb_a.copy()
-                copy_mass = blackholes_pro.mass.copy()
-                copy_ecc = blackholes_pro.orb_ecc.copy()
-
                 # BH-BH encounters
                 blackholes_pro.orb_a, blackholes_pro.orb_ecc  = dynamics.circular_singles_encounters_prograde_sweep_optimized(
                     opts.smbh_mass,
-                    copy_a,
-                    copy_mass,
-                    copy_ecc,
+                    blackholes_pro.orb_a,
+                    blackholes_pro.orb_mass,
+                    blackholes_pro.orb_ecc,
                     opts.timestep_duration_yr,
                     opts.disk_bh_pro_orb_ecc_crit,
                     opts.delta_energy_strong_mu,
