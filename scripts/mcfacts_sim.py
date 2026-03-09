@@ -1108,10 +1108,28 @@ def main():
             if opts.flag_dynamic_enc > 0:
 
                 # BH-BH encounters
+                # # --- BEGIN: capture sweep inputs for test generation ---
+                # import csv as _csv
+                # _sweep_csv = "tests/sweep_inputs.csv"
+                # def _fmt_arr(a):
+                #     return "[" + " ".join(f"{v:.15g}" for v in np.asarray(a).ravel()) + "]"
+                # _sweep_row = [
+                #     opts.smbh_mass,
+                #     _fmt_arr(blackholes_pro.orb_a),
+                #     _fmt_arr(blackholes_pro.mass),
+                #     _fmt_arr(blackholes_pro.orb_ecc),
+                #     opts.timestep_duration_yr,
+                #     opts.disk_bh_pro_orb_ecc_crit,
+                #     opts.delta_energy_strong_mu,
+                #     opts.disk_radius_outer,
+                # ]
+                # with open(_sweep_csv, "a", newline="") as _f:
+                #     _csv.writer(_f).writerow(_sweep_row)
+                # # --- END: capture sweep inputs for test generation ---
                 blackholes_pro.orb_a, blackholes_pro.orb_ecc  = dynamics.circular_singles_encounters_prograde_sweep_optimized(
                     opts.smbh_mass,
                     blackholes_pro.orb_a,
-                    blackholes_pro.orb_mass,
+                    blackholes_pro.mass,
                     blackholes_pro.orb_ecc,
                     opts.timestep_duration_yr,
                     opts.disk_bh_pro_orb_ecc_crit,
