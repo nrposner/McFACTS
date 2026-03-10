@@ -249,12 +249,6 @@ def r_schwarzschild_of_m_optimized(mass):
     r_sch : numpy.ndarray
         Schwarzschild radius [m] with `astropy.units.quantity.Quantity`
     """
-    # print("type is", type(mass))
-    # print(dir(mass))
-    # if hasattr(mass, 'unit'):
-    #     print("Has unit", mass.unit)
-    # else:
-    #     print("Has no unit")
 
     if mass.shape == (0,):
         return mass * u.m
