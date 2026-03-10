@@ -15,6 +15,8 @@ import astropy.units as u
 import astropy.constants as const
 
 from mcfast import r_schwarzschild_of_m_helper as r_helper
+from mcfast import si_from_r_g_helper as si_helper
+from mcfast import r_g_from_units_helper as rg_helper
 
 ######## Functions ########
 
@@ -153,6 +155,24 @@ def orbital_separation_evolve_reverse(mass_1, mass_2, sep_final, evolve_time):
     return sep_initial * u.m
 
 
+
+def si_from_r_g_optimized(smbh_mass, distance_rg, r_g_defined=None):
+    """Calculate the SI distance from r_g
+
+    Parameters
+    ----------
+    smbh_mass : float
+        Mass [M_sun] of the SMBH
+    distance_rg : array_like
+        Distances [r_{g,SMBH}]
+
+    Returns
+    -------
+    distance : numpy.ndarray
+        Distance in SI with :obj:`astropy.units.quantity.Quantity` type
+    """
+    return si_helper(smbh_mass, distance_rg) * u.m
+
 def si_from_r_g(smbh_mass, distance_rg, r_g_defined=None):
     """Calculate the SI distance from r_g
 
@@ -196,6 +216,24 @@ def si_from_r_g(smbh_mass, distance_rg, r_g_defined=None):
         "distance contains values <= 0"
 
     return distance
+
+def r_g_from_units_optimized(smbh_mass, distance):
+    """Calculate the SI distance from r_g
+
+    Parameters
+    ----------
+    smbh_mass : float
+        Mass [M_sun] of the SMBH
+    distance_rg : astropy.units.quantity.Quantity
+        Distances
+
+    Returns
+    -------
+    distance_rg : numpy.ndarray
+        Distances [r_g]
+    """
+
+    return rg_helper(smbh_mass, distance) * u.m
 
 
 def r_g_from_units(smbh_mass, distance):

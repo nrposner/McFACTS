@@ -377,7 +377,8 @@ def main():
                                    new_orb_a=stars.orb_a,
                                    new_mass=stars.mass,
                                    new_orb_ecc=stars.orb_ecc,
-                                   new_size=point_masses.r_g_from_units(opts.smbh_mass, (10 ** stars.log_radius) * u.Rsun).value,
+                                   # new_size=point_masses.r_g_from_units(opts.smbh_mass, (10 ** stars.log_radius) * u.Rsun).value,
+                                   new_size=point_masses.r_g_from_units_optimized(opts.smbh_mass, (10 ** stars.log_radius) * u.Rsun).value,
                                    new_direction=np.zeros(stars.num),
                                    new_disk_inner_outer=np.zeros(stars.num))
 
@@ -1001,7 +1002,8 @@ def main():
             filing_cabinet.update(id_num=stars_pro.id_num,
                                   attr=["mass", "size"],
                                   new_info=[stars_pro.mass,
-                                            point_masses.r_g_from_units(opts.smbh_mass, (10 ** stars_pro.log_radius) * u.Rsun).value])
+                                            # point_masses.r_g_from_units(opts.smbh_mass, (10 ** stars_pro.log_radius) * u.Rsun).value])
+                                            point_masses.r_g_from_units_optimized(opts.smbh_mass, (10 ** stars_pro.log_radius) * u.Rsun).value])
 
             # Spin up/down and torque spin angle
             blackholes_pro.spin, blackholes_pro.spin_angle = accretion.change_bh_spin(
@@ -1252,7 +1254,8 @@ def main():
                                                new_orb_a=stars_pro.at_id_num(star_merged_id_num_new, "orb_a"),
                                                new_mass=stars_pro.at_id_num(star_merged_id_num_new, "mass"),
                                                new_orb_ecc=stars_pro.at_id_num(star_merged_id_num_new, "orb_ecc"),
-                                               new_size=point_masses.r_g_from_units(opts.smbh_mass, (10 ** stars_pro.at_id_num(star_merged_id_num_new, "log_radius")) * u.Rsun).value,
+                                               # new_size=point_masses.r_g_from_units(opts.smbh_mass, (10 ** stars_pro.at_id_num(star_merged_id_num_new, "log_radius")) * u.Rsun).value,
+                                               new_size=point_masses.r_g_from_units_optimized(opts.smbh_mass, (10 ** stars_pro.at_id_num(star_merged_id_num_new, "log_radius")) * u.Rsun).value,
                                                new_direction=np.ones(star_merged_id_num_new.size),
                                                new_disk_inner_outer=np.ones(star_merged_id_num_new.size))
                     # Add initial params to arrays
@@ -1607,7 +1610,8 @@ def main():
                         if (star_id_nums_fakequasi.size > 0):
                             # if star mass > binary mass the BBH hardens so bin_sep = Rsun and star blows up
                             _, bbh_fakequasi_id_mask = np.where(blackholes_binary.id_num == bbh_id_nums_fakequasi[:, None])
-                            blackholes_binary.bin_sep[bbh_fakequasi_id_mask] = point_masses.r_g_from_units(opts.smbh_mass, 1.*u.Rsun).value
+                            # blackholes_binary.bin_sep[bbh_fakequasi_id_mask] = point_masses.r_g_from_units(opts.smbh_mass, 1.*u.Rsun).value
+                            blackholes_binary.bin_sep[bbh_fakequasi_id_mask] = point_masses.r_g_from_units_optimized(opts.smbh_mass, 1.*u.Rsun).value
                             stars_disrupted.add_stars(new_id_num_star=star_id_nums_fakequasi,
                                                       new_id_num_bh=bbh_id_nums_fakequasi,
                                                       new_mass_star=stars_pro.at_id_num(star_id_nums_fakequasi, "mass"),
@@ -1917,7 +1921,8 @@ def main():
                         if (star_id_nums_fakequasi.size > 0):
                             # if star mass > binary mass the BBH hardens so bin_sep = Rsun and star blows up
                             _, bbh_fakequasi_id_mask = np.where(blackholes_binary.id_num == bbh_id_nums_fakequasi[:, None])
-                            blackholes_binary.bin_sep[bbh_fakequasi_id_mask] = point_masses.r_g_from_units(opts.smbh_mass, 1.*u.Rsun).value
+                            # blackholes_binary.bin_sep[bbh_fakequasi_id_mask] = point_masses.r_g_from_units(opts.smbh_mass, 1.*u.Rsun).value
+                            blackholes_binary.bin_sep[bbh_fakequasi_id_mask] = point_masses.r_g_from_units_optimized(opts.smbh_mass, 1.*u.Rsun).value
                             stars_disrupted.add_stars(new_id_num_star=star_id_nums_fakequasi,
                                                       new_id_num_bh=bbh_id_nums_fakequasi,
                                                       new_mass_star=stars_pro.at_id_num(star_id_nums_fakequasi, "mass"),
@@ -2750,7 +2755,8 @@ def main():
                                                new_orb_a=stars_pro.at_id_num(star_merged_id_num_new, "orb_a"),
                                                new_mass=stars_pro.at_id_num(star_merged_id_num_new, "mass"),
                                                new_orb_ecc=stars_pro.at_id_num(star_merged_id_num_new, "orb_ecc"),
-                                               new_size=point_masses.r_g_from_units(opts.smbh_mass, (10 ** stars_pro.at_id_num(star_merged_id_num_new, "log_radius")) * u.Rsun).value,
+                                               # new_size=point_masses.r_g_from_units(opts.smbh_mass, (10 ** stars_pro.at_id_num(star_merged_id_num_new, "log_radius")) * u.Rsun).value,
+                                               new_size=point_masses.r_g_from_units_optimized(opts.smbh_mass, (10 ** stars_pro.at_id_num(star_merged_id_num_new, "log_radius")) * u.Rsun).value,
                                                new_direction=np.ones(star_merged_id_num_new.size),
                                                new_disk_inner_outer=np.ones(star_merged_id_num_new.size))
                     # Add initial params to arrays
@@ -2847,7 +2853,8 @@ def main():
                                                new_orb_a=star_orb_a_captured,
                                                new_mass=star_mass_captured,
                                                new_orb_ecc=star_orb_ecc_captured,
-                                               new_size=point_masses.r_g_from_units(opts.smbh_mass, (10 ** star_log_radius_captured) * u.Rsun).value,
+                                               # new_size=point_masses.r_g_from_units(opts.smbh_mass, (10 ** star_log_radius_captured) * u.Rsun).value,
+                                               new_size=point_masses.r_g_from_units_optimized(opts.smbh_mass, (10 ** star_log_radius_captured) * u.Rsun).value,
                                                new_direction=np.ones(num_star_captured),
                                                new_disk_inner_outer=np.zeros(num_star_captured))
                     # Add initial params to arrays

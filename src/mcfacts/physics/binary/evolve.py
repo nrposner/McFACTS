@@ -333,7 +333,8 @@ def bin_contact_check(bin_mass_1, bin_mass_2, bin_sep, bin_flag_merging, smbh_ma
     # contact_condition = (point_masses.r_schwarzschild_of_m_optimized(bin_mass_1) +
     #                      point_masses.r_schwarzschild_of_m_optimized(bin_mass_2))
     contact_condition = point_masses.r_schwarzschild_of_m_optimized(bin_mass_1 + bin_mass_2)
-    contact_condition = point_masses.r_g_from_units(smbh_mass, contact_condition).value
+    # contact_condition = point_masses.r_g_from_units(smbh_mass, contact_condition).value
+    contact_condition = point_masses.r_g_from_units_optimized(smbh_mass, contact_condition).value
     mask_condition = (bin_sep <= contact_condition)
 
     # If binary separation <= contact condition, set binary separation to contact condition
@@ -461,7 +462,8 @@ def bin_harden_baruteau(bin_mass_1, bin_mass_2, bin_sep, bin_ecc, bin_time_to_me
     time_to_merger_gw = (point_masses.time_of_orbital_shrinkage(
         bin_mass_1[idx_non_mergers] * u.Msun,
         bin_mass_2[idx_non_mergers] * u.Msun,
-        point_masses.si_from_r_g(smbh_mass, bin_sep_nomerge, r_g_defined=r_g_in_meters),
+        # point_masses.si_from_r_g(smbh_mass, bin_sep_nomerge, r_g_defined=r_g_in_meters),
+        point_masses.si_from_r_g_optimized(smbh_mass, bin_sep_nomerge),
         sep_final=sep_crit
     ) * ecc_factor).value
 
