@@ -6,6 +6,7 @@ import numpy as np
 import scipy
 import astropy.constants as const
 import astropy.units as u
+from mcfast import baruteau_helper
 
 
 def change_bin_mass(binary_mass_1, binary_mass_2, binary_flag_merging, disk_bh_eddington_ratio,
@@ -329,10 +330,18 @@ def bin_contact_check(bin_mass_1, bin_mass_2, bin_sep, bin_flag_merging, smbh_ma
     """
 
     # We assume bh are not spinning when in contact. TODO: Consider spin in future.
-    contact_condition = (point_masses.r_schwarzschild_of_m(bin_mass_1) +
-                         point_masses.r_schwarzschild_of_m(bin_mass_2))
+    # print(bin_mass_1.shape)
+    # print(bin_mass_2.shape)
+    contact_condition = (point_masses.r_schwarzschild_of_m_optimized(bin_mass_1) +
+                         point_masses.r_schwarzschild_of_m_optimized(bin_mass_2))
+    # print("Initial contact condition type: ", type(contact_condition))
+    # print("Initial contact condition shape: ", contact_condition.shape)
     contact_condition = point_masses.r_g_from_units(smbh_mass, contact_condition).value
+    # print("Final contact condition type: ", type(contact_condition))
+    # print("Final contact condition shape: ", contact_condition.shape)
     mask_condition = (bin_sep <= contact_condition)
+    # print("Mask condition type: ", type(mask_condition))
+    # print("Mask condition shape: ", mask_condition.shape)
 
     # If binary separation <= contact condition, set binary separation to contact condition
     bin_sep[mask_condition] = contact_condition[mask_condition]
@@ -376,6 +385,20 @@ def bin_reality_check(bin_mass_1, bin_mass_2, bin_orb_a_1, bin_orb_a_2, bin_ecc,
     else:
         return (bh_bin_id_num_fakes)
 
+
+def bin_harden_baruteau_optimized( bin_mass_1, bin_mass_2, bin_sep, bin_ecc, bin_time_to_merger_gw, bin_flag_merging, bin_time_merged, smbh_mass, timestep_duration_yr, time_gw_normalization, time_passed, r_g_in_meters):
+    return baruteau_helper(
+        bin_mass_1, 
+        bin_mass_2, 
+        bin_sep, 
+        bin_ecc, 
+        bin_time_to_merger_gw, 
+        bin_flag_merging, 
+        bin_time_merged, 
+        smbh_mass, 
+        timestep_duration_yr, 
+        time_passed
+    )
 
 def bin_harden_baruteau(bin_mass_1, bin_mass_2, bin_sep, bin_ecc, bin_time_to_merger_gw, bin_flag_merging, bin_time_merged, smbh_mass, timestep_duration_yr,
                         time_gw_normalization, time_passed, r_g_in_meters):

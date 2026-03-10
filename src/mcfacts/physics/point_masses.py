@@ -14,6 +14,8 @@ import scipy
 import astropy.units as u
 import astropy.constants as const
 
+from mcfast import r_schwarzschild_of_m_helper as r_helper
+
 ######## Functions ########
 
 
@@ -234,6 +236,30 @@ def r_g_from_units(smbh_mass, distance):
 
     return distance_rg
 
+def r_schwarzschild_of_m_optimized(mass):
+    """Calculate the Schwarzschild radius from the mass of the object.
+
+    Parameters
+    ----------
+    mass : numpy.ndarray or float
+        Mass [Msun] of the object(s)
+
+    Returns
+    -------
+    r_sch : numpy.ndarray
+        Schwarzschild radius [m] with `astropy.units.quantity.Quantity`
+    """
+    # print("type is", type(mass))
+    # print(dir(mass))
+    # if hasattr(mass, 'unit'):
+    #     print("Has unit", mass.unit)
+    # else:
+    #     print("Has no unit")
+
+    if mass.shape == (0,):
+        return mass * u.m
+    else:
+        return r_helper(mass) * u.m
 
 def r_schwarzschild_of_m(mass):
     """Calculate the Schwarzschild radius from the mass of the object.

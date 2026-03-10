@@ -2058,7 +2058,15 @@ def main():
 
                 # Harden binaries via gas
                 # Choose between Baruteau et al. 2011 gas hardening, or gas hardening from LANL simulations. To do: include dynamical hardening/softening from encounters
-                blackholes_binary.bin_sep, blackholes_binary.flag_merging, blackholes_binary.time_merged, blackholes_binary.time_to_merger_gw = evolve.bin_harden_baruteau(
+
+                # sep_copy = blackholes_binary.bin_sep.copy()
+                # flag_copy = blackholes_binary.flag_merging.copy()
+                # time_merged_copy = blackholes_binary.time_merged.copy()
+                # time_to_merger_copy = blackholes_binary.time_to_merger_gw.copy()
+
+    # (out_sep, out_flag_merging, out_time_merged, out_time_to_merger_gw)
+
+                blackholes_binary.bin_sep, blackholes_binary.flag_merging, blackholes_binary.time_merged, blackholes_binary.time_to_merger_gw = evolve.bin_harden_baruteau_optimized(
                     blackholes_binary.mass_1,
                     blackholes_binary.mass_2,
                     blackholes_binary.bin_sep,
@@ -2071,6 +2079,27 @@ def main():
                     time_gw_normalization,
                     time_passed,
                     opts.r_g_in_meters)
+
+
+                # out_bin_sep, out_flag_merging, out_time_merged, out_time_to_merger_gw = evolve.bin_harden_baruteau_optimized(
+                #     blackholes_binary.mass_1,
+                #     blackholes_binary.mass_2,
+                #     sep_copy,
+                #     blackholes_binary.bin_ecc,
+                #     time_to_merger_copy,
+                #     flag_copy,
+                #     time_merged_copy,
+                #     opts.smbh_mass,
+                #     opts.timestep_duration_yr,
+                #     time_gw_normalization,
+                #     time_passed,
+                #     opts.r_g_in_meters)
+
+
+                # assert(np.allclose(blackholes_binary.bin_sep, out_bin_sep, rtol=1e-9))
+                # assert(np.allclose(blackholes_binary.flag_merging, out_flag_merging, rtol=1e-9))
+                # assert(np.allclose(blackholes_binary.time_merged, out_time_merged, rtol=1e-9))
+                # assert(np.allclose(blackholes_binary.time_to_merger_gw, out_time_to_merger_gw, rtol=1e-6))
 
                 # Update filing cabinet with new bin_sep
                 filing_cabinet.update(id_num=blackholes_binary.id_num,

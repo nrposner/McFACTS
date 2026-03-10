@@ -15,7 +15,7 @@ import scipy.optimize
 
 from mcfacts.mcfacts_random_state import rng
 from mcfacts.physics.point_masses import time_of_orbital_shrinkage
-from mcfacts.physics.point_masses import si_from_r_g, r_g_from_units, r_schwarzschild_of_m
+from mcfacts.physics.point_masses import si_from_r_g, r_g_from_units, r_schwarzschild_of_m, r_schwarzschild_of_m_optimized
 from mcfacts.physics.binary.evolve import bin_ionization_check
 
 from mcfast import encounters_prograde_sweep_helper
@@ -1921,7 +1921,7 @@ def circular_binaries_encounters_ecc_prograde_star(
     bin_orbital_times = 3.15 * (smbh_mass / 1.e8) * ((bin_orb_a / 1.e3) ** 1.5)
     bin_orbits_per_timestep = timestep_duration_yr/bin_orbital_times
     bin_hill_sphere = bin_orb_a * ((bin_masses / smbh_mass) / 3)**(1 / 3)
-    bin_contact_sep = r_g_from_units(smbh_mass, r_schwarzschild_of_m(bin_mass_1) + r_schwarzschild_of_m(bin_mass_2)).value
+    bin_contact_sep = r_g_from_units(smbh_mass, r_schwarzschild_of_m_optimized(bin_mass_1) + r_schwarzschild_of_m_optimized(bin_mass_2)).value
 
     # Find the e> crit_ecc population. These are the interlopers that can perturb the circularized population
     ecc_prograde_population_indices = np.asarray(disk_star_pro_orbs_ecc >= disk_bh_pro_orb_ecc_crit).nonzero()[0]
@@ -2534,7 +2534,7 @@ def circular_binaries_encounters_circ_prograde_star(
     bin_orbits_per_timestep = timestep_duration_yr / bin_orbital_times
     bin_binding_energy = const.G.value * (solar_mass ** 2.0) * bin_mass_1 * bin_mass_2 / (si_from_r_g(smbh_mass, bin_sep, r_g_defined=r_g_in_meters).to("meter")).value
     bin_hill_sphere = bin_orb_a * ((bin_masses / smbh_mass) / 3)**(1 / 3)
-    bin_contact_sep = r_g_from_units(smbh_mass, r_schwarzschild_of_m(bin_mass_1) + r_schwarzschild_of_m(bin_mass_2)).value
+    bin_contact_sep = r_g_from_units(smbh_mass, r_schwarzschild_of_m_optimized(bin_mass_1) + r_schwarzschild_of_m_optimized(bin_mass_2)).value
 
     # Find the e< crit_ecc population. These are the interlopers w. low encounter vel that can harden the circularized population
     circ_prograde_population_indices = np.asarray(disk_star_pro_orbs_ecc <= disk_bh_pro_orb_ecc_crit).nonzero()[0]
