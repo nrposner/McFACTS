@@ -438,10 +438,10 @@ def tau_inc_dyn_optimized(smbh_mass, disk_bh_retro_orbs_a, disk_bh_retro_masses,
     """
     # throw most things into SI units (that's right, ENGINEER UNITS!)
     #    or more locally convenient variable names
-    SI_smbh_mass = smbh_mass * u.Msun.to("kg")  # kg
+    SI_smbh_mass = smbh_mass * u.Msun.to(u.kg)  # kg
     # SI_semi_maj_axis = si_from_r_g(smbh_mass, disk_bh_retro_orbs_a, r_g_defined=r_g_in_meters).to("m").value
     SI_semi_maj_axis = si_from_r_g_optimized(smbh_mass, disk_bh_retro_orbs_a).value
-    SI_orbiter_mass = disk_bh_retro_masses * u.Msun.to("kg")  # kg
+    SI_orbiter_mass = disk_bh_retro_masses * u.Msun.to(u.kg)  # kg
     cos_omega = np.cos(omega)
 
     disk_surf_res = disk_surf_density_func(disk_bh_retro_orbs_a)
@@ -640,7 +640,7 @@ def tau_ecc_dyn_optimized(smbh_mass, disk_bh_retro_orbs_a, disk_bh_retro_masses,
     """
     smbh_mass *= 1.988409870698051e+30
 
-    retro_mass = disk_bh_retro_masses * u.Msun.to("kg")  # kg
+    retro_mass = disk_bh_retro_masses * u.Msun.to(u.kg)  # kg
 
     # semi_maj_axis = si_from_r_g(smbh_mass, disk_bh_retro_orbs_a, r_g_defined=r_g_in_meters).to("m").value
     semi_maj_axis = si_from_r_g_optimized(smbh_mass, disk_bh_retro_orbs_a).value
