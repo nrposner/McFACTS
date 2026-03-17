@@ -8,6 +8,7 @@ from mcfacts.mcfacts_random_state import rng
 from mcfacts.physics.point_masses import si_from_r_g, si_from_r_g_optimized
 from mcfast import tau_inc_dyn_helper, tau_ecc_dyn_helper
 
+M_SUN_KG = u.Msun.to(u.kg)
 
 def orb_inc_damping(smbh_mass, disk_bh_retro_orbs_a, disk_bh_retro_masses, disk_bh_retro_orbs_ecc,
                     disk_bh_retro_orbs_inc, disk_bh_retro_arg_periapse, timestep_duration_yr, disk_surf_density_func):
@@ -438,10 +439,13 @@ def tau_inc_dyn_optimized(smbh_mass, disk_bh_retro_orbs_a, disk_bh_retro_masses,
     """
     # throw most things into SI units (that's right, ENGINEER UNITS!)
     #    or more locally convenient variable names
-    SI_smbh_mass = smbh_mass * u.Msun.to(u.kg)  # kg
+    # this unit converstion actually doesn't apply units to the assigned value, it's just a runtime calculation of 
+    # M_SUN_KG, we can hoist that calculation into a one-time constant calculation and just use that
+    SI_smbh_mass = smbh_mass * M_SUN_KG  # kg
+
     # SI_semi_maj_axis = si_from_r_g(smbh_mass, disk_bh_retro_orbs_a, r_g_defined=r_g_in_meters).to("m").value
     SI_semi_maj_axis = si_from_r_g_optimized(smbh_mass, disk_bh_retro_orbs_a).value
-    SI_orbiter_mass = disk_bh_retro_masses * u.Msun.to(u.kg)  # kg
+    SI_orbiter_mass = disk_bh_retro_masses * M_SUN_KG  # kg
     cos_omega = np.cos(omega)
 
     disk_surf_res = disk_surf_density_func(disk_bh_retro_orbs_a)
@@ -638,9 +642,9 @@ def tau_ecc_dyn_optimized(smbh_mass, disk_bh_retro_orbs_a, disk_bh_retro_masses,
     tau_a_dyn : numpy.ndarray
         Semi-major axis damping timescale [s]
     """
-    smbh_mass *= 1.988409870698051e+30
+    smbh_mass *= M_SUN_KG
 
-    retro_mass = disk_bh_retro_masses * u.Msun.to(u.kg)  # kg
+    retro_mass = disk_bh_retro_masses * M_SUN_KG  # kg
 
     # semi_maj_axis = si_from_r_g(smbh_mass, disk_bh_retro_orbs_a, r_g_defined=r_g_in_meters).to("m").value
     semi_maj_axis = si_from_r_g_optimized(smbh_mass, disk_bh_retro_orbs_a).value
