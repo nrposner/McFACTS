@@ -8,9 +8,9 @@ import astropy.units as u
 import scipy.interpolate
 from mcfacts.mcfacts_random_state import rng
 from mcfacts.physics.point_masses import si_from_r_g, si_from_r_g_optimized
+from mcfacts.physics.disk_capture import M_SUN_KG
 import scipy
 from mcfast import torque_mig_timescale_helper 
-
 
 def paardekooper10_torque(orbs_a, orbs_ecc, orb_ecc_crit, disk_dlog10surfdens_dlog10R_func, disk_dlog10temp_dlog10R_func):
     """Return the Paardekooper (2010) torque coefficient for Type 1 migration
@@ -81,7 +81,7 @@ def normalized_torque(smbh_mass, orbs_a, masses, orbs_ecc, orb_ecc_crit, disk_su
         Gravitational radius of the SMBH in meters
 
     """
-    smbh_mass_in_kg = smbh_mass * u.Msun.to("kg")
+    smbh_mass_in_kg = smbh_mass * M_SUN_KG
     # Migration only occurs for sufficiently damped orbital ecc. If orb_ecc <= ecc_crit, then migrate.
     # Otherwise no change in semi-major axis (orb_a).
     # Get indices of objects with orb_ecc <= ecc_crit so we can only update orb_a for those.
@@ -213,7 +213,7 @@ def torque_mig_timescale(smbh_mass, orbs_a, masses, orbs_ecc, orb_ecc_crit, migr
     Omega_bh = np.sqrt(const.G * smbh_mass_si/((orb_a_si)**(3.0)))
     bh_masses = u.Msun*masses[migration_indices]
     # Normalized torque = (q/h)^2 * Sigma * a^4 * Omega^2 (in units of seconds)
-    torque_mig_timescale = (bh_masses*Omega_bh*((orb_a_si)**(2.0))/(2.0*migration_torque_si)).to("s")
+    torque_mig_timescale = (bh_masses*Omega_bh*((orb_a_si)**(2.0))/(2.0*migration_torque_si)).to(u.s)
     # Check for zeros
     torque_mig_timescale[migration_torque == 0] = 0.
 
@@ -258,7 +258,7 @@ def jimenezmasset17_torque(smbh_mass, disk_surf_density_func, disk_opacity_func,
     gamma = 5./3.
     # Stefan-Boltzmann constant
     sigma_SB = scipy.constants.Stefan_Boltzmann
-    smbh_mass_in_kg = smbh_mass * u.Msun.to("kg")
+    smbh_mass_in_kg = smbh_mass * M_SUN_KG
 
     # Migration only occurs for sufficiently damped orbital ecc. If orb_ecc <= ecc_crit, then migrate.
     # Otherwise no change in semi-major axis (orb_a).
@@ -345,7 +345,7 @@ def jimenezmasset17_thermal_torque_coeff(smbh_mass, disk_surf_density_func, disk
     kappa_e_scattering = 0.7
     # Stefan-Boltzmann constant
     sigma_SB = scipy.constants.Stefan_Boltzmann
-    smbh_mass_in_kg = smbh_mass * u.Msun.to("kg")
+    smbh_mass_in_kg = smbh_mass * M_SUN_KG
 
     # Migration only occurs for sufficiently damped orbital ecc. If orb_ecc <= ecc_crit, then migrate.
     # Otherwise no change in semi-major axis (orb_a).
@@ -378,7 +378,7 @@ def jimenezmasset17_thermal_torque_coeff(smbh_mass, disk_surf_density_func, disk
     sound_speed = disk_height_in_meters*Omega_bh
 
     # BH masses in kg
-    bh_masses_in_kg = bh_masses[migration_indices]*u.Msun.to("kg")
+    bh_masses_in_kg = bh_masses[migration_indices]*M_SUN_KG
     # Bondi radii for migrating BH
     r_bondi = scipy.constants.G*bh_masses_in_kg/(sound_speed**2.0)
     # If r_bondi for a migrating BH is > disk_height, set effective Bondi radius to disk height
@@ -438,6 +438,7 @@ def jimenezmasset17_thermal_torque_coeff(smbh_mass, disk_surf_density_func, disk
 
     return Thermal_torque_coeff
 
+SEC_IN_YR = u.yr.to(u.s)
 
 def type1_migration_distance(smbh_mass, orbs_a, masses, orbs_ecc, orb_ecc_crit, torque_mig_timescale, disk_feedback_ratio,
                              disk_radius_trap, disk_radius_anti_trap, disk_radius_outer, timestep_duration_yr, flag_phenom_turb, phenom_turb_centroid, phenom_turb_std_dev, bh_min_mass, torque_prescription):
@@ -506,7 +507,7 @@ def type1_migration_distance(smbh_mass, orbs_a, masses, orbs_ecc, orb_ecc_crit, 
     normalized_mig_masses_sq = normalized_migrating_masses**2.0
 
     # ratio of timestep to tau_mig (timestep in years so convert)
-    dt = timestep_duration_yr * (1 * u.yr).to(u.s).value / tau
+    dt = timestep_duration_yr * SEC_IN_YR / tau
     # migration distance is original locations times fraction of tau_mig elapsed
     migration_distance = new_orbs_a.copy() * dt
     # zeros are not real

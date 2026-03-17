@@ -20,6 +20,7 @@ from mcfacts.physics.binary.evolve import bin_ionization_check
 
 from mcfast import encounters_prograde_sweep_helper
 
+M_SUN_KG = u.Msun.to(u.kg)
 
 def components_from_EL(E, L, units='geometric', smbh_mass=1e8):
     """Calculates new orb_a and eccentricity from specific energy and specific angular momentum
@@ -1650,7 +1651,7 @@ def circular_binaries_encounters_ecc_prograde(
         return bin_sep, bin_ecc, bin_orb_ecc, disk_bh_pro_orbs_a, disk_bh_pro_orbs_ecc
 
     # Set up constants
-    solar_mass = u.solMass.to("kg")
+    solar_mass = M_SUN_KG
     # eccentricity correction--do not let ecc>=1, catch and reset to 1-epsilon
     epsilon = 1e-8
 
@@ -1911,7 +1912,7 @@ def circular_binaries_encounters_ecc_prograde_star(
     """
 
     # Set up constants
-    solar_mass = u.solMass.to("kg")
+    solar_mass = M_SUN_KG
     # eccentricity correction--do not let ecc>=1, catch and reset to 1-epsilon
     epsilon = 1e-8
 
@@ -2244,7 +2245,7 @@ def circular_binaries_encounters_circ_prograde(
         return bin_sep, bin_ecc, bin_orb_ecc, disk_bh_pro_orbs_a, disk_bh_pro_orbs_ecc
 
     # Housekeeping
-    solar_mass = u.solMass.to("kg")
+    solar_mass = M_SUN_KG
 
     # Magnitude of energy change to drive binary to merger in ~2 interactions in a strong encounter. Say de_strong=0.9
     # de_strong here refers to the perturbation of the binary around its center of mass
@@ -2519,7 +2520,7 @@ def circular_binaries_encounters_circ_prograde_star(
       Take energy put into destroying binary from orb. eccentricity of m3.
     """
     # Housekeeping
-    solar_mass = u.solMass.to("kg")
+    solar_mass = M_SUN_KG
 
     # Magnitude of energy change to drive binary to merger in ~2 interactions in a strong encounter. Say de_strong=0.9
     # de_strong here refers to the perturbation of the binary around its center of mass
@@ -2873,7 +2874,7 @@ def bin_spheroid_encounter(
     # Critical disk radius (in units of r_g,SMBH) where after crit_time, all the spheroid orbits are captured.
     crit_radius = 1.e3
     # Solar mass in units of kg
-    solar_mass = u.solMass.to("kg")
+    solar_mass = M_SUN_KG
     # Magnitude of energy change to drive binary to merger in ~2 interactions in a strong encounter. Say de_strong=0.9
     # de_strong here refers to the perturbation of the binary around its center of mass
     # The energy in the exchange is assumed to come from the binary binding energy around its c.o.m.
