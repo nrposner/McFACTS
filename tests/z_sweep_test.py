@@ -21,7 +21,7 @@ def parse_array(cell):
 
 def setup_sweep_params():
     """Return input parameters read from CSV."""
-    inputs = pd.read_csv("tests/sweep_inputs.csv", header=None)
+    inputs = pd.read_csv("tests/optimizations/sweep_inputs.csv", header=None)
     params = []
     for _, row in inputs.iterrows():
         params.append(tuple(parse_array(row[i]) for i in range(8)))
