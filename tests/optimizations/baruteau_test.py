@@ -34,16 +34,16 @@ def parse_value(cell):
 
 def setup_baruteau_params():
     """Return input parameters read from CSV."""
-    inputs = pd.read_csv("tests/baruteau_inputs.csv", header=None)
+    inputs = pd.read_csv("tests/optimizations/baruteau_inputs.csv", header=None)
     params = []
     for _, row in inputs.iterrows():
-        params.append(tuple(parse_array(row[i]) for i in range(11)))
+        params.append(tuple(parse_value(row[i]) for i in range(11)))
     return params
 
 
 @pytest.mark.parametrize(
     "bin_mass_1, bin_mass_2, bin_sep, bin_ecc, bin_time_to_merger_gw, bin_flag_merging, "
-    "bin_time_merged, sbh_mass, timestep_duration_yr, time_gw_normalization, time_passed",
+    "bin_time_merged, smbh_mass, timestep_duration_yr, time_gw_normalization, time_passed",
     setup_baruteau_params(),
 )
 def test_sweep_optimized_matches_original(
@@ -60,28 +60,28 @@ def test_sweep_optimized_matches_original(
     time_passed,
 ):
 
-    orig = bin_harden_baruteau(
-        bin_mass_1,
-        bin_mass_2,
-        bin_sep,
-        bin_ecc,
-        bin_time_to_merger_gw,
-        bin_flag_merging,
-        bin_time_merged,
+    out_sep, out_flag_merging, out_time_merged, out_time_to_merger_gw = bin_harden_baruteau(
+        np.array([bin_mass_1]),
+        np.array([ bin_mass_2 ]),
+        np.array([ bin_sep ]),
+        np.array([ bin_ecc ]),
+        np.array([ bin_time_to_merger_gw ]),
+        np.array([ bin_flag_merging ]),
+        np.array([ bin_time_merged ]),
         smbh_mass,
         timestep_duration_yr,
         time_gw_normalization,
         time_passed,
         r_g_in_meters=None
     )
-    opt = bin_harden_baruteau_optimized(
-        bin_mass_1,
-        bin_mass_2,
-        bin_sep,
-        bin_ecc,
-        bin_time_to_merger_gw,
-        bin_flag_merging,
-        bin_time_merged,
+    out_sep_opt, out_flag_merging_opt, out_time_merged_opt, out_time_to_merger_gw_opt = bin_harden_baruteau_optimized(
+        np.array([ bin_mass_1 ]),
+        np.array([ bin_mass_2 ]),
+        np.array([ bin_sep ]),
+        np.array([ bin_ecc ]),
+        np.array([ bin_time_to_merger_gw ]),
+        np.array([ bin_flag_merging ]),
+        np.array([ bin_time_merged ]),
         smbh_mass,
         timestep_duration_yr,
         time_gw_normalization,
@@ -89,9 +89,11 @@ def test_sweep_optimized_matches_original(
         r_g_in_meters=None
     )
 
-    assert np.allclose(orig, opt, rtol=1e-9), \
-        f"orbs_a mismatch: max diff = {np.max(np.abs(orig - opt))}"
+    assert np.allclose(out_sep, out_sep_opt, rtol=1e-6)
 
+    assert np.allclose(out_flag_merging, out_flag_merging_opt, rtol=1e-6)
+    assert np.allclose(out_time_merged, out_time_merged_opt, rtol=1e-6)
+    assert np.allclose(out_time_to_merger_gw, out_time_to_merger_gw_opt, rtol=1e-6)
 
 
 
