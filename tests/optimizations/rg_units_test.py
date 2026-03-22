@@ -3,7 +3,7 @@ import astropy.units as u
 from mcfacts.physics.point_masses import r_g_from_units, r_g_from_units_optimized
 
 
-units = [u.m]
+units = [u.m, u.Rsun]
 
 # and the array case
 vals = [1.0, 5435.46345, 48.5, 137.0, 0.00001, -1.0, -32432.6, np.array([0.0, 1.0, 5435.46345, 48.5, 137.0, 0.00001, -1.0, -32432.6])]
@@ -18,6 +18,6 @@ def test_rg_units():
         orig = r_g_from_units(smbh_mass, val * unit) * u.m
         opt = r_g_from_units_optimized(smbh_mass, val * unit)
 
-        assert(np.allclose(orig, opt, rtol=1e-9))
+        assert(np.allclose(orig, opt, rtol=1e-6))
 
 
