@@ -218,7 +218,7 @@ def si_from_r_g(smbh_mass, distance_rg, r_g_defined=None):
     return distance
 
 def r_g_from_units_optimized(smbh_mass, distance):
-    """Calculate the SI distance from r_g
+    """Calculate the r_g distance from SI
 
     Parameters
     ----------
@@ -237,7 +237,7 @@ def r_g_from_units_optimized(smbh_mass, distance):
 
 
 def r_g_from_units(smbh_mass, distance):
-    """Calculate the SI distance from r_g
+    """Calculate the r_g distance from SI
 
     Parameters
     ----------
@@ -289,7 +289,10 @@ def r_schwarzschild_of_m_optimized(mass):
     """
 
     if mass.shape == (0,):
-        return mass * u.m
+        if hasattr(mass, 'unit'):
+            return mass.to(u.m)
+        else:
+            return mass * u.m
     else:
         return r_schwarzschild_of_m_helper(mass) * u.m
 
