@@ -177,7 +177,7 @@ def sample_powerlaw_icdf(
     w_outer = region_mass(crit_radius, end, beta_outer)
     w_total = w_inner + w_outer
 
-    if w_total <= 0.0 | np.isfinite(w_total):
+    if (w_total <= 0.0) | (not np.isfinite(w_total)):
         raise ValueError("[sample_powerlaw_icdf] Total probability mass is zero or non-finite. \
              Check that start < end and indices are valid.")
         return
