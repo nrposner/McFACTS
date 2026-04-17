@@ -101,6 +101,138 @@ def setup_disk_blackholes_location_NSC_powerlaw_optimized(disk_bh_num,
 
     return bh_initial_locations
 
+LOG_THRESHOLD = 1e-14
+
+def region_mass(start: float, end: float, beta: float) -> float:
+    """
+    Compute the unnormalized integral of r^beta over [start, end]
+      beta != -1:  (end^(beta+1) - start^(beta+1)) / (beta+1)
+      beta == -1:  ln(end/start)
+    """
+    if start >= end:
+        return 0.0
+    bp1 = beta + 1.0
+    if abs(bp1) < LOG_THRESHOLD:
+        # beta ≈ -1 case
+        return np.log(end / start)
+    else:
+        return (end**bp1 - start**bp1) / bp1
+
+def icdf(u: float, start: float, end: float, beta: float) -> float:
+    """
+    Inverse CDF for f(x) ∝ x^beta over [start, end].
+    Given u ∈ [0, 1), returns x such that CDF(x) = u.
+      beta != -1:  r = ((1-u) * start^(beta+1) + u * end^(beta+1)) ^ (1/(beta+1))
+      beta == -1:  r = start * (end/start)^u
+    """
+    bp1 = beta + 1.0
+    if abs(bp1) < LOG_THRESHOLD:
+        return start * (end / start)**u
+    else:
+        start_bp1 = start**bp1
+        end_bp1 = end**bp1
+        return ((1.0 - u) * start_bp1 + u * end_bp1)**(1.0 / bp1)
+
+def sample_powerlaw_icdf(
+    start: float,
+    end: float,
+    crit_radius: float,
+    index_inner: float,
+    index_outer: float,
+    volume_scaling: bool,
+    sample_arr: np.ndarray,
+) -> np.ndarray | None:
+    """
+     Directly sample from the piecewise power-law distribution using
+     inverse CDF transform. No grid, no PDF array, one powf per sample.
+
+     Arguments match generate_r's convention:
+       start, end       — radial range [start, end]
+       crit_radius      — breakpoint between inner and outer power law
+       index_inner/outer — power-law indices (positive; negated internally)
+       volume_scaling    — if true, weight by r^2 (spherical shell volume)
+       sample_arr        — uniform random draws in [0, 1), one per BH
+
+     Returns: array of radial positions, same length as samples.
+    """
+
+    # Effective exponent: f(r) ∝ r^beta
+    # Without volume scaling: f(r) ∝ (r/r_c)^(-alpha) ∝ r^(-alpha)
+    # With volume scaling:    f(r) ∝ r^2 * r^(-alpha) = r^(2 - alpha)
+    if volume_scaling: 
+        beta_inner = 2.0 - index_inner 
+        beta_outer = 2.0 - index_outer 
+    else: 
+        beta_inner = -index_inner
+        beta_outer = -index_outer
+
+    # Clamp crit_radius to [start, end] so both regions are well-defined
+    if crit_radius < start:
+        crit_radius = start
+    if crit_radius > end:
+        crit_radius = end
+
+    # Unnormalized probability mass of each region
+    w_inner = region_mass(start, crit_radius, beta_inner)
+    w_outer = region_mass(crit_radius, end, beta_outer)
+    w_total = w_inner + w_outer
+
+    if w_total <= 0.0 | np.isfinite(w_total):
+        raise ValueError("[sample_powerlaw_icdf] Total probability mass is zero or non-finite. \
+             Check that start < end and indices are valid.")
+        return
+   
+    p_inner = w_inner / w_total
+
+    n = len(sample_arr)
+    result_arr = np.zeros(n)
+
+    for i, sample in enumerate(sample_arr):
+        if sample < p_inner:
+            u_inner = sample/p_inner
+            result_arr[i] = icdf(u_inner, start, crit_radius, beta_inner)
+        else:
+            u_outer = (sample - p_inner) / (1.0 - p_inner)
+            result_arr[i] = icdf(u_outer, crit_radius, end, beta_outer)
+
+    return result_arr
+
+def setup_disk_blackholes_location_NSC_powerlaw_optimized_2(
+    disk_bh_num,
+    disk_radius_outer,
+    disk_inner_stable_circ_orb,
+    smbh_mass,
+    nsc_radius_crit,
+    nsc_density_index_inner,
+    nsc_density_index_outer,
+    volume_scaling=True,
+):
+    """
+    Draw black hole radial positions from a piecewise power-law PDF
+    using analytic inverse-CDF sampling.
+    """
+
+    # Unit conversions from Parsec to Gravitational radii
+    convert_1pc_to_rg_SMBH = 2.e5 * (smbh_mass / 1.e8)**(-1.0)
+    # nsc_radius_outer_rg = nsc_radius_outer * convert_1pc_to_rg_SMBH
+    nsc_radius_crit_rg = nsc_radius_crit * convert_1pc_to_rg_SMBH
+
+    # Draw raw uniform samples -- this is what the RNG produces
+    u = rng.random(size=disk_bh_num)
+
+    # Transform to power-law distribution via inverse CDF
+    bh_initial_locations = sample_powerlaw_icdf(
+        start=disk_inner_stable_circ_orb,
+        end=disk_radius_outer,
+        crit_radius=nsc_radius_crit_rg,
+        index_inner=nsc_density_index_inner,
+        index_outer=nsc_density_index_outer,
+        volume_scaling=volume_scaling,
+        sample_arr=u,
+    )
+
+    return bh_initial_locations
+
 def setup_disk_blackholes_location_NSC_powerlaw(disk_bh_num,
                                   disk_radius_outer,
                                   disk_inner_stable_circ_orb,
