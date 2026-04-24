@@ -1125,7 +1125,7 @@ def main():
 
                 # Star-star encounters
                 rstar_rhill_exponent = 2.0
-                stars_pro.orb_a, stars_pro.orb_ecc, star_touch_id_nums, stars_unbound_id_nums, stars_flipped_id_nums = dynamics.circular_singles_encounters_prograde_stars(
+                stars_pro.orb_a, stars_pro.orb_ecc, star_touch_id_nums, stars_unbound_id_nums, stars_flipped_id_nums = dynamics.circular_singles_encounters_prograde_stars_optimized(
                     opts.smbh_mass,
                     stars_pro.orb_a,
                     stars_pro.mass,
