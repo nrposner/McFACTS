@@ -39,6 +39,8 @@ from mcfacts.outputs import emri_cols, bh_surviving_cols, bh_cols, \
 #binary_field_names = "bin_orb_a1 bin_orb_a2 mass1 mass2 spin1 spin2 theta1 theta2 sep bin_com time_gw merger_flag time_mgr  gen_1 gen_2  bin_ang_mom bin_ecc bin_incl bin_orb_ecc nu_gw h_bin"
 # This one isn't used anywhere
 
+from mcfacts.mcfacts_random_state import rng
+
 # Do not change this line EVER
 DEFAULT_INI = impresources.files(input_data) / "mcfacts_default.ini"
 # Feature in testing do not use unless you know what you're doing.
@@ -1123,6 +1125,18 @@ def main():
                     opts.disk_radius_outer,
                 )
 
+                orb_a_copy = stars_pro.orb_a.copy()
+                mass_copy = stars_pro.mass.copy()
+                log_radius_copy = stars_pro.log_radius.copy()
+                orb_ecc_copy = stars_pro.orb_ecc.copy()
+                id_num_copy = stars_pro.id_num.copy()
+
+                # print("Type of orb ecc: ", type(stars_pro.orb_ecc))
+                # print("Type of orb ecc copy: ", type(orb_ecc_copy))
+                # print(orb_ecc_copy)
+
+                rng.seed(730534),
+
                 # Star-star encounters
                 rstar_rhill_exponent = 2.0
                 stars_pro.orb_a, stars_pro.orb_ecc, star_touch_id_nums, stars_unbound_id_nums, stars_flipped_id_nums = dynamics.circular_singles_encounters_prograde_stars_optimized(
@@ -1138,8 +1152,34 @@ def main():
                     opts.delta_energy_strong_mu,
                     opts.delta_energy_strong_sigma,
                     opts.disk_radius_outer,
+                    # rng_here = rng.seed(730534),
                     fast_cube = opts.flag_dynamics_sweep
                 )
+
+                rng.seed(730534),
+
+                orb_a_old, orb_ecc_old, star_touch_id_nums_old, stars_unbound_id_nums_old, stars_flipped_id_nums_old = dynamics.circular_singles_encounters_prograde_stars(
+                    opts.smbh_mass,
+                    orb_a_copy,
+                    mass_copy,
+                    log_radius_copy,
+                    orb_ecc_copy,
+                    id_num_copy,
+                    rstar_rhill_exponent,
+                    opts.timestep_duration_yr,
+                    opts.disk_bh_pro_orb_ecc_crit,
+                    opts.delta_energy_strong_mu,
+                    opts.delta_energy_strong_sigma,
+                    opts.disk_radius_outer,
+                    # rng_here = rng.seed(730534),
+                    fast_cube = opts.flag_dynamics_sweep
+                )
+                
+                assert(np.allclose(stars_pro.orb_a, orb_a_old))
+                assert(np.allclose(stars_pro.orb_ecc, orb_ecc_old))
+                assert(np.allclose(star_touch_id_nums, star_touch_id_nums_old))
+                assert(np.allclose(stars_unbound_id_nums, stars_unbound_id_nums_old))
+                assert(np.allclose(stars_flipped_id_nums, stars_flipped_id_nums_old))
 
                 if stars_unbound_id_nums.size > 0:
                     stars_unbound.add_stars(new_id_num=stars_unbound_id_nums,
@@ -1249,6 +1289,19 @@ def main():
 
                     filing_cabinet.remove_id_num(star_touch_id_nums.flatten())
                     stars_pro.remove_id_num(star_touch_id_nums.flatten())
+
+                star_orb_a_copy = stars_pro.orb_a.copy()
+                star_mass_copy = stars_pro.mass.copy()
+                star_log_radius_copy = stars_pro.log_radius.copy()
+                star_orb_ecc_copy = stars_pro.orb_ecc.copy()
+                star_id_num_copy = stars_pro.id_num.copy()
+
+                bh_orb_a_copy = blackholes_pro.orb_a.copy()
+                bh_mass_copy = blackholes_pro.mass.copy()
+                bh_orb_ecc_copy = blackholes_pro.orb_ecc.copy()
+                bh_id_num_copy = blackholes_pro.id_num.copy()
+
+                rng.seed(730534),
                 # Star-BH encounters (circular stars and eccentric BH)
                 stars_pro.orb_a, stars_pro.orb_ecc, blackholes_pro.orb_a, blackholes_pro.orb_ecc, bh_star_touch_id_nums, bh_star_unbound_id_nums, bh_star_flipped_rotation_id_nums = dynamics.circular_singles_encounters_prograde_star_bh_optimized(
                     opts.smbh_mass,
@@ -1268,6 +1321,34 @@ def main():
                     opts.delta_energy_strong_sigma,
                     opts.disk_radius_outer
                 )
+
+                rng.seed(730534),
+                star_orb_a_old, star_orb_ecc_old, bh_orb_a_old, bh_orb_ecc_old, bh_star_touch_id_nums_old, bh_star_unbound_id_nums_old, bh_star_flipped_rotation_id_nums_old = dynamics.circular_singles_encounters_prograde_star_bh(
+                    opts.smbh_mass,
+                    star_orb_a_copy,
+                    star_mass_copy,
+                    star_log_radius_copy,
+                    star_orb_ecc_copy,
+                    star_id_num_copy,
+                    rstar_rhill_exponent,
+                    bh_orb_a_copy,
+                    bh_mass_copy,
+                    bh_orb_ecc_copy,
+                    bh_id_num_copy,
+                    opts.timestep_duration_yr,
+                    opts.disk_bh_pro_orb_ecc_crit,
+                    opts.delta_energy_strong_mu,
+                    opts.delta_energy_strong_sigma,
+                    opts.disk_radius_outer
+                )
+
+                assert(np.allclose(stars_pro.orb_a, star_orb_a_old))
+                assert(np.allclose(stars_pro.orb_ecc, star_orb_ecc_old))
+                assert(np.allclose(blackholes_pro.orb_a, bh_orb_a_old))
+                assert(np.allclose(blackholes_pro.orb_ecc, bh_orb_ecc_old))
+                assert(np.allclose(bh_star_touch_id_nums_old, bh_star_touch_id_nums))
+                assert(np.allclose(bh_star_unbound_id_nums_old, bh_star_unbound_id_nums))
+                assert(np.allclose(bh_star_flipped_rotation_id_nums_old, bh_star_flipped_rotation_id_nums))
 
                 if bh_star_unbound_id_nums.size > 0:
                     blackholes_unbound.add_blackholes(new_id_num=bh_star_unbound_id_nums,
