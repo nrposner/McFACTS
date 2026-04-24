@@ -1326,11 +1326,6 @@ def circular_singles_encounters_prograde_stars(
     # Find the e> crit_ecc population. These are the interlopers that can perturb the circularized population
     ecc_prograde_population_indices = np.asarray(disk_star_pro_orbs_ecc > disk_bh_pro_orb_ecc_crit).nonzero()[0]
 
-    print("circular_singles_encounters_prograde_stars counts:")
-    print("Circular population: ", len(circ_prograde_population_indices))
-    print("Eccentric population: ", len(ecc_prograde_population_indices))
-    print("Circular proportion: ", len(circ_prograde_population_indices) / (len(circ_prograde_population_indices) + len(ecc_prograde_population_indices)))
-
     if (len(circ_prograde_population_indices) == 0) or (len(ecc_prograde_population_indices) == 0):
         return disk_star_pro_orbs_a, disk_star_pro_orbs_ecc, np.array([]), np.array([]), np.array([])
 
