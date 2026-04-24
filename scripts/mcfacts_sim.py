@@ -1250,7 +1250,7 @@ def main():
                     filing_cabinet.remove_id_num(star_touch_id_nums.flatten())
                     stars_pro.remove_id_num(star_touch_id_nums.flatten())
                 # Star-BH encounters (circular stars and eccentric BH)
-                stars_pro.orb_a, stars_pro.orb_ecc, blackholes_pro.orb_a, blackholes_pro.orb_ecc, bh_star_touch_id_nums, bh_star_unbound_id_nums, bh_star_flipped_rotation_id_nums = dynamics.circular_singles_encounters_prograde_star_bh(
+                stars_pro.orb_a, stars_pro.orb_ecc, blackholes_pro.orb_a, blackholes_pro.orb_ecc, bh_star_touch_id_nums, bh_star_unbound_id_nums, bh_star_flipped_rotation_id_nums = dynamics.circular_singles_encounters_prograde_star_bh_optimized(
                     opts.smbh_mass,
                     stars_pro.orb_a,
                     stars_pro.mass,
