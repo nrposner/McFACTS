@@ -214,7 +214,7 @@ def cubic_finite_step_root_cardano(x0, y0, OmegaS, sanity = False):
 
     return np.c_[roots_x, roots_y] 
 
-def transition_physical_as_EL(E1, L1, E2, L2, DeltaE, m1, m2, units='geometric', smbh_mass=1e8, sanity=False, fast_cube = False):
+def transition_physical_as_EL(E1, L1, E2, L2, DeltaE, m1, m2, units='geometric', smbh_mass=1e8, sanity=False):
     """Calculates final energy and angular momentum states
 
     Parameters
@@ -291,10 +291,7 @@ def transition_physical_as_EL(E1, L1, E2, L2, DeltaE, m1, m2, units='geometric',
         #   -  Object 1 is moving to tighter orbits (lower energy magnitude), so root of x is increasing in magnitude!
         Omega_trial = Omega2  # np.min([Omega2, Omega2_f, Omega1, Omega1_f])
 
-        if fast_cube:
-            my_stepsize_roots = cubic_finite_step_root_cardano(x0_alt, y0_alt, Omega_trial / Omega0)
-        else: 
-            my_stepsize_roots = cubic_finite_step_root(x0_alt, y0_alt, Omega_trial / Omega0)
+        my_stepsize_roots = cubic_finite_step_root_cardano(x0_alt, y0_alt, Omega_trial / Omega0)
 
         if sanity:
             print(" Pick root n between : x", my_stepsize_roots[:, 0], "between ", (x0, x0_alt), ", y ", my_stepsize_roots[:, 1],  " between ", (y0, y0_alt))
@@ -320,10 +317,7 @@ def transition_physical_as_EL(E1, L1, E2, L2, DeltaE, m1, m2, units='geometric',
             print("Dimensionless root finder: coordinates (should be close to -1/2, 1)", x0, y0)
         # Slope calculation, based on object 2 ('accepting' object/circular case)
 
-        if fast_cube:
-            my_roots = cubic_y_root_cardano(x0, y0)
-        else:
-            my_roots = cubic_y_root(x0, y0)
+        my_roots = cubic_y_root_cardano(x0, y0)
 
         # restore physical units, these are y values; ell = y*ell0; and \Omega = (GM)^2/ell^3
         my_roots_ell = ell0 * my_roots
@@ -342,10 +336,7 @@ def transition_physical_as_EL(E1, L1, E2, L2, DeltaE, m1, m2, units='geometric',
         if sanity:
             print(" Dimensionless root finder part 2: coordinates for eccentric system ", x0_alt, y0_alt)
 
-        if fast_cube:
-            my_roots_alt = cubic_y_root_cardano(x0_alt, y0_alt)
-        else:
-            my_roots_alt = cubic_y_root(x0_alt, y0_alt)
+        my_roots_alt = cubic_y_root_cardano(x0_alt, y0_alt)
 
         my_roots_omega_alt = (G_val * smbh_mass) ** 2/(ell0 * my_roots_alt) ** 3
         my_roots_omega_alt = np.real(my_roots_omega_alt[np.real(my_roots_omega_alt) > 0])
@@ -375,8 +366,7 @@ def encounters_new_orba_ecc(smbh_mass,
                             id_num_give,
                             id_num_take,
                             delta_energy_strong,
-                            flag_obj_types,
-                            fast_cube = False):
+                            flag_obj_types):
     """Calculate new orb_a and ecc values for two objects that dynamically interact
 
     Parameters
@@ -459,7 +449,7 @@ def encounters_new_orba_ecc(smbh_mass,
     id_num_unbound = None
     id_num_flipped_rotation = None
 
-    E_give_final, E_take_final, J_give_final, J_take_final = transition_physical_as_EL(E_give_initial, J_give_initial, E_take_initial, J_take_initial, Delta_E, mass_give_geometric, mass_take_geometric, smbh_mass=smbh_mass_geometric, sanity=False, fast_cube = fast_cube)
+    E_give_final, E_take_final, J_give_final, J_take_final = transition_physical_as_EL(E_give_initial, J_give_initial, E_take_initial, J_take_initial, Delta_E, mass_give_geometric, mass_take_geometric, smbh_mass=smbh_mass_geometric, sanity=False)
 
     # if object is unbound, don't change parameters so they can be recorded
     # give object (typically eccentric) is unbound
@@ -904,9 +894,7 @@ def circular_singles_encounters_prograde_stars_optimized(
         delta_energy_strong_mu,
         delta_energy_strong_sigma,
         disk_radius_outer,
-        rng_here=rng,
-        fast_cube=False,
-        ):
+        rng_here=rng):
     """Adjust orb ecc due to encounters between 2 single circ pro stars.
 
     See original docstring for full physics description. This is a
@@ -1078,8 +1066,7 @@ def circular_singles_encounters_prograde_stars_optimized(
             disk_star_pro_orbs_ecc[ecc_idx], disk_star_pro_orbs_ecc[circ_idx],
             disk_star_pro_radius_rg[ecc_idx], disk_star_pro_radius_rg[circ_idx],
             id_ecc, id_circ,
-            delta_energy_strong[i, j], flag_obj_types=0, fast_cube=fast_cube,
-        )
+            delta_energy_strong[i, j], flag_obj_types=0)
 
         if id_num_out is not None:
             unbound_set.add(id_num_out)
@@ -1127,7 +1114,7 @@ def circular_singles_encounters_prograde_stars_optimized(
     # phase 3
     id_nums_poss_touch = np.array(id_nums_poss_touch)
     frac_rhill_sep = np.array(frac_rhill_sep)
-    id_nums_unbound = np.array(sorted(unbound_set)) if unbound_set else np.array([])
+    id_nums_unbound = np.array(list(unbound_set)) if unbound_set else np.array([])
     id_nums_flipped_rotation = np.array(sorted(flipped_set)) if flipped_set else np.array([])
 
     if id_nums_poss_touch.size > 0:
@@ -1166,7 +1153,7 @@ def circular_singles_encounters_prograde_stars_optimized(
     else:
         id_nums_touch = id_nums_poss_touch
 
-    id_nums_touch = id_nums_touch.T if id_nums_touch.size > 0 else id_nums_touch
+    id_nums_touch = id_nums_touch.T #if id_nums_touch.size > 0 else id_nums_touch
 
     return (disk_star_pro_orbs_a, disk_star_pro_orbs_ecc,
             id_nums_touch, id_nums_unbound, id_nums_flipped_rotation)
@@ -1184,9 +1171,7 @@ def circular_singles_encounters_prograde_stars(
         delta_energy_strong_mu,
         delta_energy_strong_sigma,
         disk_radius_outer,
-        rng_here = rng,
-        fast_cube = False
-        ):
+        rng_here = rng):
     """"Adjust orb ecc due to encounters between 2 single circ pro stars
 
     Parameters
@@ -1380,7 +1365,7 @@ def circular_singles_encounters_prograde_stars(
                                     disk_star_pro_orbs_ecc[ecc_idx], disk_star_pro_orbs_ecc[circ_idx],
                                     disk_star_pro_radius_rg[ecc_idx], disk_star_pro_radius_rg[circ_idx],
                                     disk_star_pro_id_nums[ecc_idx], disk_star_pro_id_nums[circ_idx],
-                                    delta_energy_strong[i][j], flag_obj_types=0, fast_cube = fast_cube)
+                                    delta_energy_strong[i][j], flag_obj_types=0)
                                 if id_num_out is not None:
                                     id_nums_unbound.append(id_num_out)
                                 if id_num_flip is not None:
@@ -1732,7 +1717,7 @@ def circular_singles_encounters_prograde_star_bh_optimized(
     # ------------------------------------------------------------------
     id_nums_poss_touch = np.array(id_nums_poss_touch)
     frac_rhill_sep = np.array(frac_rhill_sep)
-    id_nums_unbound = np.array(sorted(unbound_set)) if unbound_set else np.array([])
+    id_nums_unbound = np.array(list(unbound_set)) if unbound_set else np.array([])
     id_nums_flipped_rotation = np.array(sorted(flipped_set)) if flipped_set else np.array([])
  
     if id_nums_poss_touch.size > 0:
@@ -1767,7 +1752,7 @@ def circular_singles_encounters_prograde_star_bh_optimized(
     else:
         id_nums_touch = id_nums_poss_touch
  
-    id_nums_touch = id_nums_touch.T if id_nums_touch.size > 0 else id_nums_touch
+    id_nums_touch = id_nums_touch.T # if id_nums_touch.size > 0 else id_nums_touch
  
     return (disk_star_pro_orbs_a, disk_star_pro_orbs_ecc,
             disk_bh_pro_orbs_a, disk_bh_pro_orbs_ecc,
