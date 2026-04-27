@@ -897,8 +897,52 @@ def circular_singles_encounters_prograde_stars_optimized(
         rng_here=rng):
     """Adjust orb ecc due to encounters between 2 single circ pro stars.
 
-    See original docstring for full physics description. This is a
-    restructured implementation that:
+    Parameters
+    ----------
+    smbh_mass : float
+        Mass [M_sun] of supermassive black hole
+    disk_bh_pro_orbs_a : numpy.ndarray
+        Orbital semi-major axes [r_{g,SMBH}] of prograde singleton star at start of a timestep (math:`r_g=GM_{SMBH}/c^2`) with :obj:`float` type
+    disk_bh_pro_masses : numpy.ndarray
+        Masses [M_sun] of prograde singleton star at start of timestep with :obj:`float` type
+    disk_star_pro_radius : numpy.ndarray
+        Radii [Rsun] of prograde singleton star at start of timestep with :obj: `float` type
+    disk_bh_pro_orbs_ecc : numpy.ndarray
+        Orbital eccentricity [unitless] of singleton prograde star with :obj:`float` type
+    disk_star_pro_id_nums : numpy.ndarray
+        ID numbers of singleton prograde stars
+    rstar_rhill_exponent : float
+        Exponent for the ratio of R_star / R_Hill. Default is 2
+    timestep_duration_yr : float
+        Length of timestep [yr]
+    disk_bh_pro_orb_ecc_crit : float
+        Critical orbital eccentricity [unitless] below which orbit is close enough to circularize
+    delta_energy_strong_mu : float
+        Average energy change [units??] per strong encounter
+    delta_energy_strong_sigma : float
+        Standard deviation of average energy change per strong encounter
+
+    Returns
+    -------
+    disk_star_pro_orbs_a : numpy.ndarray
+        Updated BH semi-major axis [r_{g,SMBH}] perturbed by dynamics with :obj:`float` type
+    disk_star_pro_orbs_ecc : numpy.ndarray
+        Updated BH orbital eccentricities [unitless] perturbed by dynamics with :obj:`float` type
+    disk_star_pro_id_nums_touch : numpy.ndarray
+        ID numbers of stars that will touch each other
+
+    Notes
+    -----
+    Return array of modified singleton star orbital eccentricities perturbed
+    by encounters within :math:`f*R_{Hill}`, where f is some fraction/multiple of
+    Hill sphere radius R_H
+
+    Assume encounters between damped star (e<e_crit) and undamped star
+    (e>e_crit) are the only important ones for now.
+    Since the e<e_crit population is the most likely BBH merger source.
+
+    See original implementation's docstring for full physics description. This 
+    is a restructured implementation in three phases:
 
       Phase 1 (vectorized): generate candidate (circ, ecc) pairs that
       pass the a-overlap predicate AND the per-timestep probability roll.
@@ -911,12 +955,22 @@ def circular_singles_encounters_prograde_stars_optimized(
       collapse, boundary clipping for disk_radius_outer, output shaping)
       is unchanged.
 
-    Semantics intended to be identical to the original loop given the
+    Semantics are intended to be identical to the original loop given the
     same RNG stream: same pre-drawn `chance_of_enc` and
     `delta_energy_strong` matrices, same iteration order, same skip
     conditions. Boundary clipping against `disk_radius_outer` is applied
     inline in Phase 2 (as in the original) rather than as a post-pass,
     because epsilon was drawn per (i, j) cell.
+
+    The only exception is that in rare cases, the unbound_id_nums return outputs
+    the elements in a different order. Given that this output is used only for 
+    adding and removing stars, the exact order shouldn't matter.
+
+    Consequently, RNG generation is the vast majority of the optimized
+    function's runtime. In the future, if we were willing to drop the 
+    requirement of rng stream equivalence with the original function, 
+    we could move the rng calls into the loop, eliminating the vast majority
+    of them and substantially speeding it up.
     """
     # partition into circular and eccentric populations
     circ_idxs = np.flatnonzero(disk_star_pro_orbs_ecc <= disk_bh_pro_orb_ecc_crit)
@@ -925,19 +979,13 @@ def circular_singles_encounters_prograde_stars_optimized(
     n_circ = circ_idxs.size
     n_ecc = ecc_idxs.size
 
-    # print("circular_singles_encounters_prograde_stars counts:")
-    # print("Circular population: ", n_circ)
-    # print("Eccentric population: ", n_ecc)
-    # if (n_circ + n_ecc) > 0:
-    #     print("Circular proportion: ", n_circ / (n_circ + n_ecc))
-
     if n_circ == 0 or n_ecc == 0:
         return (disk_star_pro_orbs_a, disk_star_pro_orbs_ecc,
                 np.array([]), np.array([]), np.array([]))
 
     # precompute per-population scalars 
     # (original: use start-of-timestep a and ecc for the geometric predicates)
-    disk_star_pro_radius_rg = r_g_from_units(
+    disk_star_pro_radius_rg = r_g_from_units_optimized(
         smbh_mass, ((10 ** disk_star_pro_radius) * u.Rsun)
     ).value
 
@@ -978,10 +1026,6 @@ def circular_singles_encounters_prograde_stars_optimized(
         )
     )
     
-    # design assumes that circ outnumbers ecc considerably
-    # in tests, there were between 10-100 circ stars to ecc stars
-    # on a given time step
-
     # sparse overlap extraction
     # sort circular stars by a
     circ_sort_idx = np.argsort(a_circ_initial)
@@ -1153,7 +1197,7 @@ def circular_singles_encounters_prograde_stars_optimized(
     else:
         id_nums_touch = id_nums_poss_touch
 
-    id_nums_touch = id_nums_touch.T #if id_nums_touch.size > 0 else id_nums_touch
+    id_nums_touch = id_nums_touch.T 
 
     return (disk_star_pro_orbs_a, disk_star_pro_orbs_ecc,
             id_nums_touch, id_nums_unbound, id_nums_flipped_rotation)
@@ -1475,9 +1519,56 @@ def circular_singles_encounters_prograde_star_bh_optimized(
         disk_radius_outer,
         ):
     """Adjust orb ecc due to encounters between single circ star and single ecc BH.
+
+    Parameters
+    ----------
+    smbh_mass : float
+        Mass [M_sun] of supermassive black hole
+    disk_bh_pro_orbs_a : numpy.ndarray
+        Orbital semi-major axes [r_{g,SMBH}] of prograde singleton star at start of a timestep (math:`r_g=GM_{SMBH}/c^2`) with :obj:`float` type
+    disk_bh_pro_masses : numpy.ndarray
+        Masses [M_sun] of prograde singleton star at start of timestep with :obj:`float` type
+    disk_star_pro_radius : numpy.ndarray
+        Radii [Rsun] of prograde singleton star at start of timestep with :obj: `float` type
+    disk_bh_pro_orbs_ecc : numpy.ndarray
+        Orbital eccentricity [unitless] of singleton prograde star with :obj:`float` type
+    disk_star_pro_id_nums : numpy.ndarray
+        ID numbers of singleton prograde stars
+    rstar_rhill_exponent : float
+        Exponent for the ratio of R_star / R_Hill. Default is 2
+    timestep_duration_yr : float
+        Length of timestep [yr]
+    disk_bh_pro_orb_ecc_crit : float
+        Critical orbital eccentricity [unitless] below which orbit is close enough to circularize
+    delta_energy_strong : float
+        Average energy change [units??] per strong encounter
+
+    Returns
+    -------
+    disk_star_pro_orbs_a : numpy.ndarray
+        Updated stars semi-major axis [r_{g,SMBH}] perturbed by dynamics with :obj:`float` type
+    disk_star_pro_orbs_ecc : numpy.ndarray
+        Updated stars orbital eccentricities [unitless] perturbed by dynamics with :obj:`float` type
+    disk_star_pro_id_nums_touch : numpy.ndarray
+        ID numbers of stars that will touch each other
+    disk_bh_pro_orbs_a : numpy.ndarray
+        Updated BH semi-major axis [r_{g,SMBH}] perturbed by dynamics with :obj:`float` type
+    disk_bh_pro_orbs_ecc : numpy.ndarray
+        Updated BH orbital eccentricities [unitless] perturbed by dynamics with :obj:`float` type
+
+    Notes
+    -----
+    Return array of modified singleton star orbital eccentricities perturbed
+    by encounters within :math:`f*R_{Hill}`, where f is some fraction/multiple of
+    Hill sphere radius R_H
+
+    Assume encounters between damped star (e<e_crit) and undamped star
+    (e>e_crit) are the only important ones for now.
+    Since the e<e_crit population is the most likely BBH merger source.
+
  
-    Restructured version of circular_singles_encounters_prograde_star_bh.
-    See that function's docstring for the physics. This implementation:
+    See original implementation's docstring for full physics description. This 
+    is a restructured implementation in three phases:
  
       Phase 1 (vectorized): draws all randomness in the same order and
       shape as the original (bit-for-bit RNG stream equivalence), then
@@ -1497,10 +1588,25 @@ def circular_singles_encounters_prograde_star_bh_optimized(
     into shared id_nums_unbound / id_nums_flipped_rotation lists; this
     matches the original's behavior even though it assumes non-
     overlapping ID ranges.
+
+    Semantics are intended to be identical to the original loop given the
+    same RNG stream: same pre-drawn `chance_of_enc` and
+    `delta_energy_strong` matrices, same iteration order, same skip
+    conditions. Boundary clipping against `disk_radius_outer` is applied
+    inline in Phase 2 (as in the original) rather than as a post-pass,
+    because epsilon was drawn per (i, j) cell.
+
+    The only exception is that in rare cases, the unbound_id_nums return outputs
+    the elements in a different order. Given that this output is used only for 
+    adding and removing stars, the exact order shouldn't matter.
+
+    Consequently, RNG generation is the vast majority of the optimized
+    function's runtime. In the future, if we were willing to drop the 
+    requirement of rng stream equivalence with the original function, 
+    we could move the rng calls into the loop, eliminating the vast majority
+    of them and substantially speeding it up.
     """
-    # ------------------------------------------------------------------
-    # Partition: circular stars vs eccentric BHs
-    # ------------------------------------------------------------------
+    # partition: circular stars vs eccentric BHs
     circ_idxs = np.flatnonzero(disk_star_pro_orbs_ecc <= disk_bh_pro_orb_ecc_crit)
     ecc_idxs = np.flatnonzero(disk_bh_pro_orbs_ecc > disk_bh_pro_orb_ecc_crit)
  
@@ -1512,10 +1618,8 @@ def circular_singles_encounters_prograde_star_bh_optimized(
                 disk_bh_pro_orbs_a, disk_bh_pro_orbs_ecc,
                 np.array([]), np.array([]), np.array([]))
  
-    # ------------------------------------------------------------------
-    # Precompute per-population scalars (start-of-timestep snapshots)
-    # ------------------------------------------------------------------
-    disk_star_pro_radius_rg = r_g_from_units(
+    # precompute per-population scalars (start-of-timestep snapshots)
+    disk_star_pro_radius_rg = r_g_from_units_optimized(
         smbh_mass, ((10 ** disk_star_pro_radius) * u.Rsun)
     ).value
  
@@ -1525,11 +1629,9 @@ def circular_singles_encounters_prograde_star_bh_optimized(
     m_circ = disk_star_pro_masses[circ_idxs]
     m_ecc = disk_bh_pro_masses[ecc_idxs]
  
-    # Perihelion / apohelion of eccentric BHs
     ecc_orb_min = a_ecc_initial * (1.0 - ecc_of_ecc)
     ecc_orb_max = a_ecc_initial * (1.0 + ecc_of_ecc)
  
-    # Orbital timescale of circular stars -- same constant folding as original
     orbital_timescales_circ = (
         scipy.constants.pi
         * (a_circ_initial ** 1.5)
@@ -1538,11 +1640,7 @@ def circular_singles_encounters_prograde_star_bh_optimized(
     )
     N_circ_orbs_per_timestep = timestep_duration_yr / orbital_timescales_circ
  
-    # ------------------------------------------------------------------
-    # Draw all randomness in the original's order and shape.
-    # This preserves bit-for-bit RNG stream equivalence. Do NOT reorder
-    # or shrink these draws.
-    # ------------------------------------------------------------------
+    # draw all randomness in the original's order and shape
     epsilon_star = (
         disk_radius_outer
         * ((m_circ / (3.0 * (m_circ + smbh_mass))) ** (1.0 / 3.0))
@@ -1558,18 +1656,12 @@ def circular_singles_encounters_prograde_star_bh_optimized(
         )
     )
  
-    # ------------------------------------------------------------------
-    # Phase 1: sparse overlap extraction via searchsorted.
-    # Avoids the O(n_circ * n_ecc) boolean mask and the np.nonzero on it.
-    # ------------------------------------------------------------------
+    # phase 1: sparse overlap extraction via searchsorted
     circ_sort_idx = np.argsort(a_circ_initial)
     a_circ_sorted = a_circ_initial[circ_sort_idx]
  
-    # For each eccentric BH j, find the slice of circular stars whose
-    # semi-major axis lies in (ecc_orb_min[j], ecc_orb_max[j]).
-    # side='right' on the lower bound and side='left' on the upper bound
-    # reproduces the original's strict-inequality check a_circ > min
-    # and a_circ < max.
+    # for each eccentric BH j, find the slice of circular stars whose
+    # semi-major axis lies in (ecc_orb_min[j], ecc_orb_max[j])
     lo = np.searchsorted(a_circ_sorted, ecc_orb_min, side='right')
     hi = np.searchsorted(a_circ_sorted, ecc_orb_max, side='left')
     overlap_counts = hi - lo
@@ -1579,7 +1671,7 @@ def circular_singles_encounters_prograde_star_bh_optimized(
         cand_i = np.array([], dtype=np.intp)
         cand_j = np.array([], dtype=np.intp)
     else:
-        # Flatten the per-ecc-star slices into (overlap_i, overlap_j) arrays
+        # flatten the per-ecc-star slices into (overlap_i, overlap_j) arrays
         overlap_i = np.empty(total_overlaps, dtype=np.intp)
         overlap_j = np.empty(total_overlaps, dtype=np.intp)
         offset = 0
@@ -1591,8 +1683,8 @@ def circular_singles_encounters_prograde_star_bh_optimized(
             overlap_j[offset:offset + k] = j
             offset += k
  
-        # Vectorized probability roll on just the overlap pairs. Index
-        # into the already-drawn chance_of_enc matrix at overlap positions.
+        # vectorized probability roll on just the overlap pairs, index into 
+        # the already-drawn chance_of_enc matrix at overlap positions.
         m_circ_o = m_circ[overlap_i]
         m_ecc_o = m_ecc[overlap_j]
         temp_bin_mass = m_circ_o + m_ecc_o
@@ -1607,18 +1699,13 @@ def circular_singles_encounters_prograde_star_bh_optimized(
         cand_i = overlap_i[survived]
         cand_j = overlap_j[survived]
  
-    # Restore lexicographic (i, j) order to match the original nested
-    # loop. Essential: the "one strong encounter per circular star" rule
-    # means order determines which encounter wins when a circular star
-    # overlaps multiple eccentric BHs.
+    # restore lexicographic (i, j) order to match the original nested loop 
     if cand_i.size > 1:
         order = np.lexsort((cand_j, cand_i))
         cand_i = cand_i[order]
         cand_j = cand_j[order]
  
-    # ------------------------------------------------------------------
-    # Phase 2: sequential resolution of surviving candidates.
-    # ------------------------------------------------------------------
+    # phase 2: sequential resolution of surviving candidates
     unbound_set = set()
     flipped_set = set()
     id_nums_poss_touch = []
@@ -1633,20 +1720,21 @@ def circular_singles_encounters_prograde_star_bh_optimized(
         id_circ = disk_star_pro_id_nums[circ_idx]
         id_ecc = disk_bh_pro_id_nums[ecc_idx]
  
-        # Skip if either object has been removed from play. Note the
-        # original uses a single shared list for both populations; we
-        # preserve that by using shared sets.
+        # skip if either object has been removed from play
         if (id_circ in unbound_set or id_ecc in unbound_set or
                 id_circ in flipped_set or id_ecc in flipped_set):
             continue
  
-        # Skip if the circular star was already pumped above e_crit
-        # this timestep
+        # skip if the circular star was already pumped above this timestep
         if disk_star_pro_orbs_ecc[circ_idx] > disk_bh_pro_orb_ecc_crit:
             continue
  
-        # Resolve the encounter. flag_obj_types=1 => eccentric BH /
-        # circular star. radius_give is None for the BH.
+        # resolve the encounter
+        # radius_give is None for bh, which is a bit of a pain
+        # if one of these values doesn't actually get used
+        # in one branch, then the value should be tied to
+        # the brancher. This would be a good place to use
+        # valueful enums
         (new_orb_a_ecc, new_orb_a_circ,
          new_ecc_ecc, new_ecc_circ,
          id_num_out, id_num_flip) = encounters_new_orba_ecc_helper( 
@@ -1664,7 +1752,7 @@ def circular_singles_encounters_prograde_star_bh_optimized(
         if id_num_flip is not None:
             flipped_set.add(id_num_flip)
  
-        # Clip to disk outer radius using the pre-drawn epsilon for
+        # clip to disk outer radius using the pre-drawn epsilon for
         # this (i, j) cell
         if new_orb_a_ecc > disk_radius_outer:
             new_orb_a_ecc = disk_radius_outer - epsilon_star[i, j]
@@ -1676,10 +1764,10 @@ def circular_singles_encounters_prograde_star_bh_optimized(
         disk_bh_pro_orbs_ecc[ecc_idx] = new_ecc_ecc
         disk_star_pro_orbs_ecc[circ_idx] = new_ecc_circ
  
-        # Hill-sphere touch check. NOTE: the original star-bh function
-        # does NOT guard this with `id_num_flip is None and id_num_out
-        # is None` the way the star-star function does. Preserving that
-        # original behavior here.
+        # hill-sphere touch check 
+        # NOTE: the original function does NOT guard this with 
+        # `id_num_flip is None and id_num_out is None` 
+        # the way the way prograde_stars does. Preserving that behavior here
         a_c = disk_star_pro_orbs_a[circ_idx]
         a_e = disk_bh_pro_orbs_a[ecc_idx]
         separation = abs(a_c - a_e)
@@ -1691,9 +1779,7 @@ def circular_singles_encounters_prograde_star_bh_optimized(
             id_nums_poss_touch.append(np.array([id_circ, id_ecc]))
             frac_rhill_sep.append(separation / rhill)
  
-    # ------------------------------------------------------------------
-    # Sanity checks (unchanged)
-    # ------------------------------------------------------------------
+    # sanity checks
     assert np.isfinite(disk_star_pro_orbs_a).all(), \
         "Finite check failed for disk_star_pro_orbs_a"
     assert np.isfinite(disk_star_pro_orbs_ecc).all(), \
@@ -1711,10 +1797,7 @@ def circular_singles_encounters_prograde_star_bh_optimized(
     assert np.all(disk_star_pro_orbs_a > 0), \
         "disk_star_pro_orbs_a contains values <= 0"
  
-    # ------------------------------------------------------------------
-    # Phase 3: post-processing (same logic as star-star, operating on
-    # the shared id pool)
-    # ------------------------------------------------------------------
+    # phase 3: post-processing
     id_nums_poss_touch = np.array(id_nums_poss_touch)
     frac_rhill_sep = np.array(frac_rhill_sep)
     id_nums_unbound = np.array(list(unbound_set)) if unbound_set else np.array([])
