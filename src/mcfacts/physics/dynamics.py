@@ -385,7 +385,7 @@ def encounters_new_orba_ecc(smbh_mass,
         Eccentricity of the object donating energy
     ecc_take : float
         Eccentricity of the object accreting energy
-    radius_give : float
+    radius_give : float | None
         Radius [r_{g,SMBH}] of the object donating energy
     radius_take : float
         Radius [r_{g,SMBH}] of the object accreting energy
