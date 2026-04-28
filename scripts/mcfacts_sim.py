@@ -53,75 +53,6 @@ FORBIDDEN_ARGS = [
     "disk_radius_inner",
     ]
 
-def compare_id_array(name, new, old):
-    new = np.asarray(new).ravel()
-    old = np.asarray(old).ravel()
-    new_set = set(new.tolist())
-    old_set = set(old.tolist())
-    if new_set == old_set:
-        if not np.array_equal(new, old):
-            print(f"[ORDER] {name}: same elements, different order ({len(new)} elements)")
-        return True
-    only_new = new_set - old_set
-    only_old = old_set - new_set
-    print(f"[DIFF] {name}: set difference  |only_new|={len(only_new)}  |only_old|={len(only_old)}")
-    if only_new:
-        print(f"  only in new: {sorted(only_new)}")
-    if only_old:
-        print(f"  only in old: {sorted(only_old)}")
-    return False
-
-# def compare_outputs(name, new, old, rtol=1e-7, atol=1e-9):
-#     """Compare two arrays and print a warning if they differ.
-#
-#     Handles both shape mismatches (treats as set comparison if 1D, else
-#     just reports the shape difference) and value mismatches within
-#     matching shapes.
-#     """
-#     new = np.asarray(new)
-#     old = np.asarray(old)
-#
-#     if new.shape != old.shape:
-#         print(f"[DIFF] {name}: shape mismatch  new={new.shape}  old={old.shape}")
-#         # If both are 1D, report which elements are unique to each side
-#         if new.ndim == 1 and old.ndim == 1:
-#             new_set = set(new.tolist())
-#             old_set = set(old.tolist())
-#             only_new = new_set - old_set
-#             only_old = old_set - new_set
-#             if only_new:
-#                 print(f"  only in new ({len(only_new)}): {sorted(only_new)}")
-#             if only_old:
-#                 print(f"  only in old ({len(only_old)}): {sorted(only_old)}")
-#         else:
-#             print(f"  new sample: {new.flatten()[:10]}")
-#             print(f"  old sample: {old.flatten()[:10]}")
-#         return False
-#
-#     if new.size == 0:
-#         return True  # both empty, both shape-matched -- equivalent
-#
-#     # Same shape: locate elements that differ
-#     if np.issubdtype(new.dtype, np.floating):
-#         close = np.isclose(new, old, rtol=rtol, atol=atol, equal_nan=True)
-#     else:
-#         close = new == old
-#
-#     if close.all():
-#         return True
-#
-#     diff_idx = np.flatnonzero(~close.ravel())
-#     n_diff = diff_idx.size
-#     print(f"[DIFF] {name}: {n_diff}/{close.size} elements differ")
-#     # Show up to 10 differing entries
-#     show = diff_idx[:10]
-#     for k in show:
-#         # Use unravel_index to report the position in the original shape
-#         pos = np.unravel_index(k, new.shape)
-#         print(f"  at {pos}:  new={new[pos]!r}  old={old[pos]!r}")
-#     if n_diff > len(show):
-#         print(f"  ... and {n_diff - len(show)} more")
-#     return False
 
 
 def arg():
@@ -1239,7 +1170,78 @@ def main():
                 #     opts.delta_energy_strong_sigma,
                 #     opts.disk_radius_outer,
                 # )
+                
+                # testing function for comparing array outputs
+                # def compare_id_array(name, new, old):
+                #     new = np.asarray(new).ravel()
+                #     old = np.asarray(old).ravel()
+                #     new_set = set(new.tolist())
+                #     old_set = set(old.tolist())
+                #     if new_set == old_set:
+                #         if not np.array_equal(new, old):
+                #             print(f"[ORDER] {name}: same elements, different order ({len(new)} elements)")
+                #         return True
+                #     only_new = new_set - old_set
+                #     only_old = old_set - new_set
+                #     print(f"[DIFF] {name}: set difference  |only_new|={len(only_new)}  |only_old|={len(only_old)}")
+                #     if only_new:
+                #         print(f"  only in new: {sorted(only_new)}")
+                #     if only_old:
+                #         print(f"  only in old: {sorted(only_old)}")
+                #     return False
+
+                # def compare_outputs(name, new, old, rtol=1e-7, atol=1e-9):
+                #     """Compare two arrays and print a warning if they differ.
                 #
+                #     Handles both shape mismatches (treats as set comparison if 1D, else
+                #     just reports the shape difference) and value mismatches within
+                #     matching shapes.
+                #     """
+                #     new = np.asarray(new)
+                #     old = np.asarray(old)
+                #
+                #     if new.shape != old.shape:
+                #         print(f"[DIFF] {name}: shape mismatch  new={new.shape}  old={old.shape}")
+                #         # If both are 1D, report which elements are unique to each side
+                #         if new.ndim == 1 and old.ndim == 1:
+                #             new_set = set(new.tolist())
+                #             old_set = set(old.tolist())
+                #             only_new = new_set - old_set
+                #             only_old = old_set - new_set
+                #             if only_new:
+                #                 print(f"  only in new ({len(only_new)}): {sorted(only_new)}")
+                #             if only_old:
+                #                 print(f"  only in old ({len(only_old)}): {sorted(only_old)}")
+                #         else:
+                #             print(f"  new sample: {new.flatten()[:10]}")
+                #             print(f"  old sample: {old.flatten()[:10]}")
+                #         return False
+                #
+                #     if new.size == 0:
+                #         return True  # both empty, both shape-matched -- equivalent
+                #
+                #     # Same shape: locate elements that differ
+                #     if np.issubdtype(new.dtype, np.floating):
+                #         close = np.isclose(new, old, rtol=rtol, atol=atol, equal_nan=True)
+                #     else:
+                #         close = new == old
+                #
+                #     if close.all():
+                #         return True
+                #
+                #     diff_idx = np.flatnonzero(~close.ravel())
+                #     n_diff = diff_idx.size
+                #     print(f"[DIFF] {name}: {n_diff}/{close.size} elements differ")
+                #     # Show up to 10 differing entries
+                #     show = diff_idx[:10]
+                #     for k in show:
+                #         # Use unravel_index to report the position in the original shape
+                #         pos = np.unravel_index(k, new.shape)
+                #         print(f"  at {pos}:  new={new[pos]!r}  old={old[pos]!r}")
+                #     if n_diff > len(show):
+                #         print(f"  ... and {n_diff - len(show)} more")
+                #     return False
+
                 # ok = True
                 # ok &= compare_id_array("stars_pro.orb_a",        stars_pro.orb_a,            orb_a_old)
                 # ok &= compare_id_array("stars_pro.orb_ecc",      stars_pro.orb_ecc,          orb_ecc_old)
